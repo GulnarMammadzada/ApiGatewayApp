@@ -1,0 +1,2717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luxury Restaurant Management</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d1810 50%, #1a1a1a 100%);
+            color: #f5f5dc;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Enhanced luxury header design */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: linear-gradient(90deg, rgba(26, 26, 26, 0.95) 0%, rgba(45, 24, 16, 0.95) 50%, rgba(26, 26, 26, 0.95) 100%);
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid #d4af37;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(212, 175, 55, 0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 28px;
+            font-weight: 700;
+            color: #d4af37;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #d4af37 0%, #ffd700 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1a1a1a;
+            font-weight: bold;
+            font-size: 24px;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 48px;
+        }
+
+        .nav-item {
+            color: #f5f5dc;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 16px;
+            padding: 12px 0;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            color: #d4af37;
+            border-bottom-color: #d4af37;
+            text-shadow: 0 2px 8px rgba(212, 175, 55, 0.4);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .notification-icon {
+            position: relative;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 20px;
+        }
+
+        .notification-icon:hover {
+            background: rgba(212, 175, 55, 0.2);
+            border-color: #d4af37;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            color: white;
+            font-weight: 600;
+            border: 2px solid #1a1a1a;
+        }
+
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #d4af37 0%, #ffd700 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1a1a1a;
+            font-weight: 600;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .user-avatar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+        }
+
+        /* Enhanced luxury sidebar design */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, rgba(26, 26, 26, 0.95) 0%, rgba(45, 24, 16, 0.95) 100%);
+            backdrop-filter: blur(10px);
+            border-right: 2px solid rgba(212, 175, 55, 0.2);
+            padding: 100px 0 24px 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .sidebar-menu {
+            padding: 0 20px;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 20px;
+            margin: 8px 0;
+            border-radius: 12px;
+            color: #f5f5dc;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+
+        .sidebar-item:hover {
+            background: rgba(212, 175, 55, 0.1);
+            border-color: rgba(212, 175, 55, 0.3);
+            color: #d4af37;
+            transform: translateX(4px);
+        }
+
+        .sidebar-item.active {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(255, 215, 0, 0.1));
+            border-color: #d4af37;
+            color: #d4af37;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.1);
+        }
+
+        .sidebar-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        /* Enhanced main content styling */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 100px 32px 32px 32px;
+            background: linear-gradient(135deg, rgba(26, 26, 26, 0.3) 0%, rgba(45, 24, 16, 0.3) 100%);
+        }
+
+        .page-header {
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .page-title {
+            font-size: 42px;
+            font-weight: 700;
+            color: #d4af37;
+            margin-bottom: 12px;
+            text-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+            letter-spacing: 2px;
+        }
+
+        .page-subtitle {
+            color: #f5f5dc;
+            font-size: 18px;
+            opacity: 0.8;
+            font-style: italic;
+        }
+
+        /* Enhanced dashboard section styling */
+        .dashboard-section {
+            margin-bottom: 48px;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #d4af37;
+            margin-bottom: 24px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 2px solid rgba(212, 175, 55, 0.3);
+            padding-bottom: 8px;
+        }
+
+        .notification-card {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #f5f5dc;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .notification-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(212, 175, 55, 0.2);
+            border-color: #d4af37;
+        }
+
+        .notification-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.1), transparent);
+            transition: left 0.6s;
+        }
+
+        .notification-card:hover::before {
+            left: 100%;
+        }
+
+        .notification-content h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #d4af37;
+            margin-bottom: 8px;
+        }
+
+        .notification-content p {
+            color: #f5f5dc;
+            margin-bottom: 16px;
+            opacity: 0.9;
+        }
+
+        .notification-icon-new {
+            width: 64px;
+            height: 64px;
+            background: rgba(212, 175, 55, 0.2);
+            border: 2px solid rgba(212, 175, 55, 0.4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
+            50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(212, 175, 55, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+        }
+
+        .view-order-btn {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(255, 215, 0, 0.1));
+            color: #d4af37;
+            border: 2px solid rgba(212, 175, 55, 0.5);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .view-order-btn:hover {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.3), rgba(255, 215, 0, 0.2));
+            border-color: #d4af37;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3);
+        }
+
+        /* Enhanced stats grid styling */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 28px;
+            margin-bottom: 48px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 16px;
+            padding: 28px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(212, 175, 55, 0.2);
+            border-color: #d4af37;
+        }
+
+        .stat-card h3 {
+            font-size: 16px;
+            font-weight: 500;
+            color: #f5f5dc;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 42px;
+            font-weight: 700;
+            color: #d4af37;
+            text-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+        }
+
+        /* Enhanced menu highlights styling */
+        .menu-highlights {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 28px;
+        }
+
+        .menu-highlight-card {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 16px;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .menu-highlight-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(212, 175, 55, 0.2);
+            border-color: #d4af37;
+        }
+
+        .menu-highlight-image {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            background: linear-gradient(135deg, rgba(45, 24, 16, 0.8) 0%, rgba(26, 26, 26, 0.8) 100%);
+        }
+
+        .menu-highlight-content {
+            padding: 24px;
+        }
+
+        .menu-highlight-content h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #d4af37;
+            margin-bottom: 12px;
+        }
+
+        .menu-highlight-content p {
+            color: #f5f5dc;
+            font-size: 14px;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        /* Enhanced staff section styling */
+        .staff-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .staff-card {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .staff-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(212, 175, 55, 0.2);
+            border-color: #d4af37;
+        }
+
+        .staff-avatar {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .staff-name {
+            font-size: 20px;
+            font-weight: 600;
+            color: #d4af37;
+            margin-bottom: 8px;
+        }
+
+        .staff-role {
+            color: #f5f5dc;
+            margin-bottom: 12px;
+            opacity: 0.8;
+        }
+
+        .staff-status {
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .staff-status.active {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .staff-status.break {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+
+        /* Enhanced reports section styling */
+        .report-summary {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 32px;
+            backdrop-filter: blur(10px);
+        }
+
+        .report-summary h4 {
+            color: #d4af37;
+            font-size: 20px;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .report-summary p {
+            color: #f5f5dc;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .highlight {
+            color: #d4af37;
+            font-weight: 600;
+        }
+
+        .reports-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 28px;
+        }
+
+        .chart-container {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 16px;
+            padding: 24px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .chart-container:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.15);
+            border-color: #d4af37;
+        }
+
+        .chart-title {
+            color: #d4af37;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .chart-canvas {
+            max-height: 300px;
+        }
+
+
+        /* Enhanced form and modal styling */
+        .menu-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .search-bar {
+            position: relative;
+            width: 400px;
+            max-width: 100%;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 14px 20px 14px 48px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 12px;
+            font-size: 16px;
+            background: rgba(212, 175, 55, 0.05);
+            color: #f5f5dc;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #d4af37;
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
+            background: rgba(212, 175, 55, 0.1);
+        }
+
+        .search-input::placeholder {
+            color: rgba(245, 245, 220, 0.6);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #d4af37;
+            font-size: 18px;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+
+        .filter-tab {
+            padding: 12px 24px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            background: rgba(212, 175, 55, 0.05);
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #f5f5dc;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .filter-tab:hover {
+            background: rgba(212, 175, 55, 0.1);
+            border-color: #d4af37;
+        }
+
+        .filter-tab.active {
+            background: linear-gradient(135deg, #d4af37, #ffd700);
+            color: #1a1a1a;
+            border-color: #d4af37;
+            font-weight: 600;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #d4af37, #ffd700);
+            color: #1a1a1a;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(212, 175, 55, 0.1);
+            color: #d4af37;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(212, 175, 55, 0.2);
+            border-color: #d4af37;
+        }
+
+        /* Enhanced table styling */
+        .orders-table {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.05) 0%, rgba(255, 215, 0, 0.02) 100%);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 16px;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .orders-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .orders-table th {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(255, 215, 0, 0.1));
+            padding: 20px;
+            text-align: left;
+            font-weight: 600;
+            color: #d4af37;
+            font-size: 16px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .orders-table td {
+            padding: 20px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+            font-size: 16px;
+            color: #f5f5dc;
+        }
+
+        .orders-table tr:hover {
+            background: rgba(212, 175, 55, 0.05);
+        }
+
+        .category-card {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 16px;
+            margin-bottom: 28px;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .category-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.15);
+            border-color: #d4af37;
+        }
+
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 28px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .category-info h3 {
+            font-size: 22px;
+            font-weight: 600;
+            color: #d4af37;
+            margin-bottom: 8px;
+        }
+
+        .category-info p {
+            color: #f5f5dc;
+            font-size: 16px;
+            opacity: 0.8;
+        }
+
+        .category-image {
+            width: 140px;
+            height: 100px;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 2px solid rgba(212, 175, 55, 0.3);
+        }
+
+        /* Enhanced availability toggle */
+        .availability-toggle {
+            width: 48px;
+            height: 24px;
+            background: rgba(239, 68, 68, 0.3);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            border-radius: 12px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .availability-toggle.active {
+            background: rgba(34, 197, 94, 0.3);
+            border-color: rgba(34, 197, 94, 0.5);
+        }
+
+        .availability-toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 18px;
+            height: 18px;
+            background: #f5f5dc;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .availability-toggle.active::after {
+            transform: translateX(24px);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .action-btn {
+            padding: 8px 16px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            background: rgba(212, 175, 55, 0.05);
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #f5f5dc;
+        }
+
+        .action-btn.edit {
+            color: #3b82f6;
+            border-color: rgba(59, 130, 246, 0.3);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .action-btn.edit:hover {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: #3b82f6;
+        }
+
+        .action-btn.delete {
+            color: #ef4444;
+            border-color: rgba(239, 68, 68, 0.3);
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        .action-btn.delete:hover {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: #ef4444;
+        }
+
+        /* Enhanced status badges */
+        .status-badge {
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .status-pending {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+
+        .status-confirmed {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .status-delivered {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .status-cancelled {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .customer-link {
+            color: #d4af37;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .customer-link:hover {
+            text-decoration: underline;
+            text-shadow: 0 2px 4px rgba(212, 175, 55, 0.3);
+        }
+
+        .date-text {
+            color: rgba(245, 245, 220, 0.8);
+        }
+
+        .total-amount {
+            font-weight: 600;
+            color: #d4af37;
+        }
+
+        /* Enhanced modal styling */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, rgba(26, 26, 26, 0.95) 0%, rgba(45, 24, 16, 0.95) 100%);
+            border: 2px solid rgba(212, 175, 55, 0.3);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+            padding-bottom: 16px;
+        }
+
+        .modal-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #d4af37;
+            text-shadow: 0 2px 4px rgba(212, 175, 55, 0.3);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #f5f5dc;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: rgba(212, 175, 55, 0.1);
+            color: #d4af37;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #d4af37;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 8px;
+            font-size: 16px;
+            background: rgba(212, 175, 55, 0.05);
+            color: #f5f5dc;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: #d4af37;
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
+            background: rgba(212, 175, 55, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: flex-end;
+            margin-top: 32px;
+        }
+
+        /* Enhanced toast notifications */
+        .toast-container {
+            position: fixed;
+            top: 100px;
+            right: 32px;
+            z-index: 3000;
+        }
+
+        .toast {
+            background: linear-gradient(135deg, rgba(26, 26, 26, 0.95) 0%, rgba(45, 24, 16, 0.95) 100%);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border-left: 4px solid #d4af37;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            min-width: 320px;
+            backdrop-filter: blur(10px);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .toast.success {
+            border-left-color: #22c55e;
+        }
+
+        .toast.error {
+            border-left-color: #ef4444;
+        }
+
+        .toast.warning {
+            border-left-color: #fbbf24;
+        }
+
+        .toast-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .toast-title {
+            font-weight: 600;
+            color: #d4af37;
+            font-size: 16px;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: #f5f5dc;
+            cursor: pointer;
+            padding: 0;
+            font-size: 18px;
+        }
+
+        .toast-message {
+            color: #f5f5dc;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Enhanced loading states */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 48px;
+            color: #f5f5dc;
+            font-size: 16px;
+        }
+
+        .spinner {
+            width: 28px;
+            height: 28px;
+            border: 3px solid rgba(212, 175, 55, 0.2);
+            border-top: 3px solid #d4af37;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Enhanced responsive design */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 100px 16px 16px 16px;
+            }
+
+            .nav-menu {
+                display: none;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .menu-highlights {
+                grid-template-columns: 1fr;
+            }
+
+            .reports-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .staff-grid {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            }
+
+            .search-bar {
+                width: 100%;
+                margin-bottom: 16px;
+            }
+
+            .menu-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .page-title {
+                font-size: 32px;
+            }
+
+            .modal-content {
+                padding: 24px;
+                margin: 16px;
+            }
+        }
+
+        /* Hidden class for page switching */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Category card styles */
+        .category-card {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 16px;
+            margin-bottom: 28px;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .category-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.15);
+            border-color: #d4af37;
+        }
+
+        .category-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 28px;
+        }
+
+        .category-info {
+            flex: 1;
+        }
+
+        .category-name {
+            font-size: 22px;
+            font-weight: 600;
+            color: #d4af37;
+            margin-bottom: 8px;
+        }
+
+        .category-description {
+            color: #f5f5dc;
+            font-size: 16px;
+            opacity: 0.8;
+        }
+
+        .category-stats {
+            margin-top: 12px;
+            font-size: 14px;
+            color: #d4af37;
+        }
+
+        .item-count {
+            font-weight: 500;
+        }
+
+        .category-image {
+            width: 140px;
+            height: 100px;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 2px solid rgba(212, 175, 55, 0.3);
+            margin-left: 24px;
+        }
+
+        /* Summary grid styles */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .summary-item {
+            padding: 16px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 8px;
+            background: rgba(212, 175, 55, 0.05);
+            backdrop-filter: blur(10px);
+        }
+
+        .summary-label {
+            display: block;
+            font-size: 14px;
+            color: #f5f5dc;
+            margin-bottom: 4px;
+        }
+    </style>
+</head>
+<body>
+<!-- Header -->
+<header class="header">
+    <div class="logo">
+        <div class="logo-icon">🍽</div>
+        <span>Luxury Dine</span>
+    </div>
+    <nav class="nav-menu">
+        <a href="#" class="nav-item active" data-page="dashboard">Dashboard</a>
+        <a href="#" class="nav-item" data-page="orders">Orders</a>
+        <a href="#" class="nav-item" data-page="menu">Menu</a>
+        <a href="#" class="nav-item" data-page="staff">Staff</a>
+        <a href="#" class="nav-item" data-page="reports">Reports</a>
+    </nav>
+    <div class="header-actions">
+        <div class="notification-icon" id="notificationIcon">
+            🔔
+            <div class="notification-badge" id="notificationBadge">0</div>
+        </div>
+        <div class="user-avatar">👤</div>
+    </div>
+</header>
+
+<div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <nav class="sidebar-menu">
+            <a href="#" class="sidebar-item active" data-page="dashboard">
+                <div class="sidebar-icon">📊</div>
+                Dashboard
+            </a>
+            <a href="#" class="sidebar-item" data-page="orders">
+                <div class="sidebar-icon">📋</div>
+                Orders
+            </a>
+            <a href="#" class="sidebar-item" data-page="menu">
+                <div class="sidebar-icon">🍽</div>
+                Menu
+            </a>
+            <a href="#" class="sidebar-item" data-page="staff">
+                <div class="sidebar-icon">👥</div>
+                Staff
+            </a>
+            <a href="#" class="sidebar-item" data-page="reports">
+                <div class="sidebar-icon">📈</div>
+                Reports
+            </a>
+            <div style="margin-top: 32px; padding: 0 16px;">
+                <div class="sidebar-item" id="notificationsPanel">
+                    <div class="sidebar-icon">🔔</div>
+                    Notifications
+                </div>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Dashboard Page -->
+        <div id="dashboardPage" class="page">
+            <div class="page-header">
+                <h1 class="page-title">Dashboard</h1>
+                <p class="page-subtitle">Welcome to your luxury restaurant management system</p>
+            </div>
+
+            <div class="dashboard-section">
+                <h2 class="section-title">Notifications</h2>
+                <div id="dashboardNotifications">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Loading notifications...
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-section">
+                <h2 class="section-title">Order Statistics</h2>
+                <div class="stats-grid" id="orderStats">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Loading statistics...
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-section">
+                <h2 class="section-title">Menu Highlights</h2>
+                <div class="menu-highlights" id="menuHighlights">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Loading menu highlights...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Menu Management Page -->
+        <div id="menuPage" class="page hidden">
+            <div class="page-header">
+                <h1 class="page-title">Menu Management</h1>
+                <p class="page-subtitle">Curate your exquisite dining experience</p>
+            </div>
+
+            <div class="menu-controls">
+                <div class="search-bar">
+                    <div class="search-icon">🔍</div>
+                    <input type="text" class="search-input" placeholder="Search menu items..." id="menuSearch">
+                </div>
+                <button class="btn btn-primary" id="addMenuItemBtn">Add New Item</button>
+            </div>
+
+            <div class="filter-tabs">
+                <button class="filter-tab active" data-filter="all">All Categories</button>
+                <button class="filter-tab" data-filter="available">Available</button>
+                <button class="filter-tab" data-filter="unavailable">Unavailable</button>
+            </div>
+
+            <div class="categories-section" id="categoriesSection">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Loading menu categories...
+                </div>
+            </div>
+
+            <div class="section-title">Menu Items</div>
+            <div class="orders-table">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Availability</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody id="menuItemsTable">
+                    <tr>
+                        <td colspan="5">
+                            <div class="loading">
+                                <div class="spinner"></div>
+                                Loading menu items...
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Orders Page -->
+        <div id="ordersPage" class="page hidden">
+            <div class="page-header">
+                <h1 class="page-title">Orders</h1>
+                <p class="page-subtitle">Manage your restaurant orders with elegance</p>
+            </div>
+
+            <div class="orders-table">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Total</th>
+                    </tr>
+                    </thead>
+                    <tbody id="ordersTable">
+                    <tr>
+                        <td colspan="5">
+                            <div class="loading">
+                                <div class="spinner"></div>
+                                Loading orders...
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Enhanced Staff Page with mock data -->
+        <div id="staffPage" class="page hidden">
+            <div class="page-header">
+                <h1 class="page-title">Staff Management</h1>
+                <p class="page-subtitle">Your dedicated culinary team</p>
+            </div>
+
+            <div class="staff-grid">
+                <div class="staff-card">
+                    <div class="staff-avatar">👨‍🍳</div>
+                    <div class="staff-name">Chef Marcus</div>
+                    <div class="staff-role">Executive Chef</div>
+                    <div class="staff-status active">Active</div>
+                </div>
+                <div class="staff-card">
+                    <div class="staff-avatar">👩‍🍳</div>
+                    <div class="staff-name">Chef Isabella</div>
+                    <div class="staff-role">Sous Chef</div>
+                    <div class="staff-status active">Active</div>
+                </div>
+                <div class="staff-card">
+                    <div class="staff-avatar">👨‍💼</div>
+                    <div class="staff-name">James Wilson</div>
+                    <div class="staff-role">Restaurant Manager</div>
+                    <div class="staff-status active">Active</div>
+                </div>
+                <div class="staff-card">
+                    <div class="staff-avatar">👩‍💼</div>
+                    <div class="staff-name">Sarah Chen</div>
+                    <div class="staff-role">Head Waitress</div>
+                    <div class="staff-status break">On Break</div>
+                </div>
+                <div class="staff-card">
+                    <div class="staff-avatar">👨‍🍳</div>
+                    <div class="staff-name">Antonio Rodriguez</div>
+                    <div class="staff-role">Pastry Chef</div>
+                    <div class="staff-status active">Active</div>
+                </div>
+                <div class="staff-card">
+                    <div class="staff-avatar">👩‍💼</div>
+                    <div class="staff-name">Emma Thompson</div>
+                    <div class="staff-role">Sommelier</div>
+                    <div class="staff-status active">Active</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enhanced Reports Page with real backend data integration -->
+        <div id="reportsPage" class="page hidden">
+            <div class="page-header">
+                <h1 class="page-title">Reports & Analytics</h1>
+                <p class="page-subtitle">Insights into your restaurant's performance</p>
+            </div>
+
+
+            <div class="reports-grid">
+                <div class="chart-container">
+                    <div class="chart-title">Daily Revenue</div>
+                    <canvas id="revenueChart" class="chart-canvas"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-title">Order Status Distribution</div>
+                    <canvas id="orderStatusChart" class="chart-canvas"></canvas>
+                </div>
+
+
+
+                <div class="chart-container">
+                    <div class="chart-title">Monthly Trends</div>
+                    <canvas id="trendsChart" class="chart-canvas"></canvas>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+
+<!-- Add/Edit Menu Item Modal -->
+<div class="modal" id="menuItemModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title" id="menuItemModalTitle">Add New Menu Item</h2>
+            <button class="close-btn" id="closeMenuItemModal">&times;</button>
+        </div>
+        <form id="menuItemForm">
+            <div class="form-group">
+                <label class="form-label">Name</label>
+                <input type="text" class="form-input" id="itemName" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea class="form-textarea" id="itemDescription"></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Price ($)</label>
+                <input type="number" class="form-input" id="itemPrice" step="0.01" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Category</label>
+                <select class="form-select" id="itemCategory" required>
+                    <option value="">Select Category</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Image URL</label>
+                <input type="url" class="form-input" id="itemImageUrl">
+            </div>
+            <div class="form-group">
+                <label class="form-label">
+                    <input type="checkbox" id="itemAvailable" checked> Available
+                </label>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" id="cancelMenuItemBtn">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="saveMenuItemBtn">Save Item</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Order Details Modal -->
+<div class="modal" id="orderDetailsModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Order Details</h2>
+            <button class="close-btn" id="closeOrderDetailsModal">&times;</button>
+        </div>
+        <div id="orderDetailsContent">
+            <div class="loading">
+                <div class="spinner"></div>
+                Loading order details...
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+    // Global variables
+    let stompClient = null;
+    let currentPage = 'dashboard';
+    let menuItems = [];
+    let categories = [];
+    let orders = [];
+    let currentEditingItem = null;
+    let notificationCount = 0;
+    let revenueChart, orderStatusChart, menuItemsChart, trendsChart;
+
+    // API Base URL
+    const API_BASE = 'http://localhost:8080';
+
+    // Initialize the application
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeApp();
+        initializeCharts();
+    });
+
+    function initializeApp() {
+        setupEventListeners();
+        connectWebSocket();
+        loadInitialData();
+    }
+
+    function setupEventListeners() {
+        // Navigation
+        document.querySelectorAll('.nav-item, .sidebar-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const page = e.target.getAttribute('data-page');
+                if (page) {
+                    switchPage(page);
+                }
+            });
+        });
+
+        // Menu item modal
+        document.getElementById('addMenuItemBtn').addEventListener('click', () => {
+            openMenuItemModal();
+        });
+
+        document.getElementById('closeMenuItemModal').addEventListener('click', () => {
+            closeMenuItemModal();
+        });
+
+        document.getElementById('cancelMenuItemBtn').addEventListener('click', () => {
+            closeMenuItemModal();
+        });
+
+        document.getElementById('menuItemForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            saveMenuItem();
+        });
+
+        // Order details modal
+        document.getElementById('closeOrderDetailsModal').addEventListener('click', () => {
+            closeOrderDetailsModal();
+        });
+
+        // Search functionality
+        document.getElementById('menuSearch').addEventListener('input', (e) => {
+            filterMenuItems(e.target.value);
+        });
+
+        // Filter tabs
+        document.querySelectorAll('.filter-tab').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                e.target.classList.add('active');
+                filterMenuByAvailability(e.target.getAttribute('data-filter'));
+            });
+        });
+    }
+
+    function switchPage(page) {
+        // Update navigation
+        document.querySelectorAll('.nav-item, .sidebar-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        document.querySelectorAll(`[data-page="${page}"]`).forEach(item => {
+            item.classList.add('active');
+        });
+
+        // Hide all pages
+        document.querySelectorAll('.page').forEach(p => {
+            p.classList.add('hidden');
+        });
+
+        // Show selected page
+        const targetPage = document.getElementById(page + 'Page');
+        if (targetPage) {
+            targetPage.classList.remove('hidden');
+            currentPage = page;
+
+            // Load page-specific data
+            switch(page) {
+                case 'dashboard':
+                    loadDashboardData();
+                    break;
+                case 'menu':
+                    loadMenuData();
+                    break;
+                case 'orders':
+                    loadOrdersData();
+                    break;
+                case 'reports':
+                    loadReportsData();
+                    updateCharts();
+                    break;
+            }
+        }
+    }
+
+    function initializeCharts() {
+        Chart.defaults.color = '#f5f5dc';
+        Chart.defaults.borderColor = 'rgba(212, 175, 55, 0.2)';
+        Chart.defaults.backgroundColor = 'rgba(212, 175, 55, 0.1)';
+
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#f5f5dc',
+                        font: {
+                            family: 'Georgia, serif'
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: '#f5f5dc' },
+                    grid: { color: 'rgba(212, 175, 55, 0.1)' }
+                },
+                y: {
+                    ticks: { color: '#f5f5dc' },
+                    grid: { color: 'rgba(212, 175, 55, 0.1)' }
+                }
+            }
+        };
+
+        // Initialize charts with luxury color scheme
+        const revenueCtx = document.getElementById('revenueChart');
+        if (revenueCtx) {
+            revenueChart = new Chart(revenueCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Daily Revenue',
+                        data: [],
+                        borderColor: '#d4af37',
+                        backgroundColor: 'rgba(212, 175, 55, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: chartOptions
+            });
+        }
+
+        const orderStatusCtx = document.getElementById('orderStatusChart');
+        if (orderStatusCtx) {
+            orderStatusChart = new Chart(orderStatusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: [
+                            'rgba(212, 175, 55, 0.8)',
+                            'rgba(34, 197, 94, 0.8)',
+                            'rgba(59, 130, 246, 0.8)',
+                            'rgba(239, 68, 68, 0.8)'
+                        ]
+                    }]
+                },
+                options: {
+                    ...chartOptions,
+                    scales: {} // Remove scales for doughnut chart
+                }
+            });
+        }
+
+        const menuItemsCtx = document.getElementById('menuItemsChart');
+        if (menuItemsCtx) {
+            menuItemsChart = new Chart(menuItemsCtx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Orders Count',
+                        data: [],
+                        backgroundColor: 'rgba(212, 175, 55, 0.6)',
+                        borderColor: '#d4af37',
+                        borderWidth: 1
+                    }]
+                },
+                options: chartOptions
+            });
+        }
+
+        const trendsCtx = document.getElementById('trendsChart');
+        if (trendsCtx) {
+            trendsChart = new Chart(trendsCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Monthly Revenue',
+                        data: [],
+                        borderColor: '#d4af37',
+                        backgroundColor: 'rgba(212, 175, 55, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: chartOptions
+            });
+        }
+    }
+
+    // WebSocket Connection
+    function connectWebSocket() {
+        const socket = new SockJS(API_BASE + '/ws');
+        stompClient = Stomp.over(socket);
+
+        stompClient.connect({}, function(frame) {
+            console.log('Connected to WebSocket: ' + frame);
+
+            // Subscribe to general notifications
+            stompClient.subscribe('/topic/notifications', function(message) {
+                const notification = JSON.parse(message.body);
+                showToast(notification.title, notification.message, 'info');
+                updateNotificationCount();
+            });
+
+            // Subscribe to menu updates
+            stompClient.subscribe('/topic/menu-updates', function(message) {
+                const menuUpdate = JSON.parse(message.body);
+                handleMenuUpdate(menuUpdate);
+            });
+
+            // Subscribe to order updates
+            stompClient.subscribe('/topic/order-updates', function(message) {
+                const orderUpdate = JSON.parse(message.body);
+                handleOrderUpdate(orderUpdate);
+            });
+
+        }, function(error) {
+            console.error('WebSocket connection error:', error);
+            showToast('Connection Error', 'Failed to connect to real-time updates', 'error');
+        });
+    }
+
+    function handleMenuUpdate(update) {
+        showToast('Menu Update', `Menu item "${update.name}" was ${update.eventType.toLowerCase()}`, 'info');
+        if (currentPage === 'menu') {
+            loadMenuData();
+        }
+        if (currentPage === 'dashboard') {
+            loadMenuHighlights();
+        }
+        if (currentPage === 'reports') {
+            loadReportsData();
+        }
+    }
+
+    function handleOrderUpdate(update) {
+        showToast('Order Update', `Order #${update.orderId} status: ${update.status}`, 'success');
+        if (currentPage === 'orders') {
+            loadOrdersData();
+        }
+        if (currentPage === 'dashboard') {
+            loadOrderStatistics();
+            loadDashboardNotifications();
+        }
+        if (currentPage === 'reports') {
+            loadReportsData();
+        }
+    }
+
+    // API Functions
+    async function apiRequest(url, options = {}) {
+
+            const response = await fetch(API_BASE + url, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                },
+                ...options
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+
+    }
+
+    async function graphqlRequest(query, variables = {}) {
+        try {
+            const response = await fetch(API_BASE + '/graphql', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    query: query,
+                    variables: variables
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.errors) {
+                throw new Error(result.errors[0].message);
+            }
+
+            return result.data;
+        } catch (error) {
+            console.error('GraphQL request failed:', error);
+            showToast('Error', 'Failed to fetch data', 'error');
+            throw error;
+        }
+    }
+
+    // Data Loading Functions
+    async function loadInitialData() {
+        try {
+            await Promise.all([
+                loadMenuData(),
+                loadOrdersData(),
+                loadDashboardData()
+            ]);
+        } catch (error) {
+            console.error('Failed to load initial data:', error);
+        }
+    }
+
+    async function loadDashboardData() {
+        if (currentPage !== 'dashboard') return;
+
+        await Promise.all([
+            loadDashboardNotifications(),
+            loadOrderStatistics(),
+            loadMenuHighlights()
+        ]);
+    }
+
+    async function loadDashboardNotifications() {
+        const container = document.getElementById('dashboardNotifications');
+
+        try {
+            // Get recent orders for notifications
+            const orders = await apiRequest('/api/orders');
+            const recentOrders = orders.slice(0, 3);
+
+            if (recentOrders.length === 0) {
+                container.innerHTML = '<p style="color: #f5f5dc; text-align: center; padding: 40px; opacity: 0.7;">No recent notifications</p>';
+                return;
+            }
+
+            container.innerHTML = recentOrders.map((order, index) => `
+                    <div class="notification-card">
+                        <div class="notification-content">
+                            <h3>New Order Received</h3>
+                            <p>Order #${order.id} from ${order.customerName}</p>
+                            <button class="view-order-btn" onclick="viewOrderDetails(${order.id})">View Order</button>
+                        </div>
+                        <div class="notification-icon-new">
+                            🍽️
+                        </div>
+                    </div>
+                `).join('');
+
+        } catch (error) {
+            container.innerHTML = '<p style="color: #ef4444; text-align: center; padding: 40px;">Failed to load notifications</p>';
+        }
+    }
+
+    async function loadOrderStatistics() {
+        const container = document.getElementById('orderStats');
+
+        try {
+            const orders = await apiRequest('/api/orders');
+
+            const totalOrders = orders.length;
+            const completedOrders = orders.filter(order => order.status === 'DELIVERED').length;
+            const totalRevenue = orders.reduce((sum, order) => sum + order.totalAmount, 0);
+            const averageOrderValue = orders.length > 0 ? (totalRevenue / orders.length) : 0;
+
+            container.innerHTML = `
+                    <div class="stat-card">
+                        <h3>Total Orders</h3>
+                        <div class="stat-value">${totalOrders}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Completed Orders</h3>
+                        <div class="stat-value">${completedOrders}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Revenue</h3>
+                        <div class="stat-value">$${totalRevenue.toFixed(0)}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Average Order Value</h3>
+                        <div class="stat-value">$${averageOrderValue.toFixed(0)}</div>
+                    </div>
+                `;
+
+        } catch (error) {
+            container.innerHTML = '<p style="color: #ef4444; text-align: center; padding: 40px;">Failed to load statistics</p>';
+        }
+    }
+
+    async function loadMenuHighlights() {
+        const container = document.getElementById('menuHighlights');
+
+        try {
+            const query = `
+                    query {
+                        availableMenuItems {
+                            id
+                            name
+                            description
+                            price
+                            imageUrl
+                            category {
+                                name
+                            }
+                        }
+                    }
+                `;
+
+            const data = await graphqlRequest(query);
+            const highlights = data.availableMenuItems.slice(0, 3);
+
+            if (highlights.length === 0) {
+                const mockHighlights = [
+                    { name: 'Pizza Margarita', description: 'Classic Italian pizza with tomato and mozzarella'},
+                    { name: 'Grilled Salmon', description: 'Fresh salmon with herbs and lemon butter sauce', imageUrl: '/images/picture7.jpg' },
+                    { name: 'Chocolate Lava Cake', description: 'Warm chocolate cake with a molten center, served with vanilla ice cream', imageUrl: '/images/picture8.jpg' }
+                ];
+
+                container.innerHTML = mockHighlights.map((item) => `
+                    <div class="menu-highlight-card">
+
+                        <div class="menu-highlight-content">
+                            <h3>${item.name}</h3>
+                            <p>${item.description}</p>
+                        </div>
+                    </div>
+                `).join('');
+                return;
+            }
+
+            container.innerHTML = highlights.map((item, index) => `
+                    <div class="menu-highlight-card">
+                        <div class="menu-highlight-content">
+                            <h3>${item.name}</h3>
+                            <p>${item.description || 'Delicious ' + item.category.name.toLowerCase() + ' dish'}</p>
+                        </div>
+                    </div>
+                `).join('');
+
+        } catch (error) {
+            const mockHighlights = [
+                { name: 'Pizza Margarita', description: 'Classic Italian pizza with tomato and mozzarella' },
+                { name: 'Grilled Salmon', description: 'Fresh salmon with herbs and lemon butter sauce', imageUrl: '/images/picture7.jpg' },
+                { name: 'Chocolate Lava Cake', description: 'Warm chocolate cake with a molten center, served with vanilla ice cream', imageUrl: '/images/picture8.jpg' }
+            ];
+
+            container.innerHTML = mockHighlights.map((item) => `
+                <div class="menu-highlight-card">
+                    <div class="menu-highlight-content">
+                        <h3>${item.name}</h3>
+                        <p>${item.description}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+    }
+
+    async function loadReportsData() {
+        if (currentPage !== 'reports') return;
+
+        try {
+            // Load summary data
+            await loadReportSummary();
+
+            // Update charts with real data
+            await updateCharts();
+        } catch (error) {
+            console.error('Failed to load reports data:', error);
+        }
+    }
+
+    async function loadReportSummary() {
+        const container = document.getElementById('reportSummary');
+
+        try {
+            const orders = await apiRequest('/api/orders');
+            const menuItems = await apiRequest('/api/menu-items');
+
+            // Calculate real statistics
+            const totalRevenue = orders.reduce((sum, order) => sum + order.totalAmount, 0);
+            const completedOrders = orders.filter(order => order.status === 'DELIVERED').length;
+            const averageOrderValue = orders.length > 0 ? (totalRevenue / orders.length) : 0;
+
+            // Calculate customer satisfaction (mock for now, could be from reviews API)
+            const customerSatisfaction = 4.7 + (Math.random() * 0.3);
+
+            container.innerHTML = `
+                <h4>Monthly Summary</h4>
+                <p>Total Revenue: <span class="highlight">$${totalRevenue.toFixed(2)}</span></p>
+                <p>Orders Completed: <span class="highlight">${completedOrders}</span></p>
+                <p>Average Order Value: <span class="highlight">$${averageOrderValue.toFixed(2)}</span></p>
+                <p>Customer Satisfaction: <span class="highlight">${customerSatisfaction.toFixed(1)}/5</span></p>
+            `;
+
+        } catch (error) {
+            container.innerHTML = `
+                <h4>Monthly Summary</h4>
+                <p style="color: #ef4444;">Failed to load summary data</p>
+            `;
+        }
+    }
+
+    async function updateCharts() {
+        try {
+            const orders = await apiRequest('/api/orders');
+
+            // Update Revenue Chart with real daily data
+            if (revenueChart) {
+                const dailyRevenue = calculateDailyRevenue(orders);
+                revenueChart.data.labels = dailyRevenue.labels;
+                revenueChart.data.datasets[0].data = dailyRevenue.data;
+                revenueChart.update();
+            }
+
+            // Update Order Status Chart with real data
+            if (orderStatusChart) {
+                const statusData = calculateOrderStatusDistribution(orders);
+                orderStatusChart.data.labels = statusData.labels;
+                orderStatusChart.data.datasets[0].data = statusData.data;
+                orderStatusChart.update();
+            }
+
+            // Update Popular Menu Items Chart with real data
+            if (menuItemsChart) {
+                const popularItems = calculatePopularMenuItems(orders);
+                menuItemsChart.data.labels = popularItems.labels;
+                menuItemsChart.data.datasets[0].data = popularItems.data;
+                menuItemsChart.update();
+            }
+
+            // Update Monthly Trends Chart with real data
+            if (trendsChart) {
+                const monthlyTrends = calculateMonthlyTrends(orders);
+                trendsChart.data.labels = monthlyTrends.labels;
+                trendsChart.data.datasets[0].data = monthlyTrends.data;
+                trendsChart.update();
+            }
+
+        } catch (error) {
+            console.error('Failed to update charts:', error);
+        }
+    }
+
+    function calculateDailyRevenue(orders) {
+        const dailyData = {};
+        const last7Days = [];
+
+        // Generate last 7 days
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            const dateStr = date.toISOString().split('T')[0];
+            last7Days.push(dateStr);
+            dailyData[dateStr] = 0;
+        }
+
+        // Calculate revenue for each day
+        orders.forEach(order => {
+            const orderDate = new Date(order.createdAt).toISOString().split('T')[0];
+            if (dailyData.hasOwnProperty(orderDate)) {
+                dailyData[orderDate] += order.totalAmount;
+            }
+        });
+
+        return {
+            labels: last7Days.map(date => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+            data: last7Days.map(date => dailyData[date])
+        };
+    }
+
+    function calculateOrderStatusDistribution(orders) {
+        const statusCounts = {};
+        orders.forEach(order => {
+            statusCounts[order.status] = (statusCounts[order.status] || 0) + 1;
+        });
+
+        return {
+            labels: Object.keys(statusCounts),
+            data: Object.values(statusCounts)
+        };
+    }
+
+    function calculatePopularMenuItems(orders) {
+        const itemCounts = {};
+
+        orders.forEach(order => {
+            if (order.orderItems) {
+                order.orderItems.forEach(item => {
+                    const itemName = item.menuItemName;
+                    itemCounts[itemName] = (itemCounts[itemName] || 0) + item.quantity;
+                });
+            }
+        });
+
+        // Get top 5 items
+        const sortedItems = Object.entries(itemCounts)
+            .sort(([,a], [,b]) => b - a)
+            .slice(0, 5);
+
+        return {
+            labels: sortedItems.map(([name]) => name),
+            data: sortedItems.map(([, count]) => count)
+        };
+    }
+
+    function calculateMonthlyTrends(orders) {
+        const monthlyData = {};
+        const last6Months = [];
+
+        // Generate last 6 months
+        for (let i = 5; i >= 0; i--) {
+            const date = new Date();
+            date.setMonth(date.getMonth() - i);
+            const monthStr = date.toISOString().substring(0, 7); // YYYY-MM format
+            last6Months.push(monthStr);
+            monthlyData[monthStr] = 0;
+        }
+
+        // Calculate revenue for each month
+        orders.forEach(order => {
+            const orderMonth = new Date(order.createdAt).toISOString().substring(0, 7);
+            if (monthlyData.hasOwnProperty(orderMonth)) {
+                monthlyData[orderMonth] += order.totalAmount;
+            }
+        });
+
+        return {
+            labels: last6Months.map(month => new Date(month + '-01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })),
+            data: last6Months.map(month => monthlyData[month])
+        };
+    }
+
+    async function loadMenuData() {
+        await Promise.all([
+            loadCategories(),
+            loadMenuItems()
+        ]);
+    }
+
+    async function loadCategories() {
+        try {
+            const query = `
+                    query {
+                        categories {
+                            id
+                            name
+                            description
+                            menuItems {
+                                id
+                                name
+                                price
+                                available
+                            }
+                        }
+                    }
+                `;
+
+            const data = await graphqlRequest(query);
+            categories = data.categories;
+
+            // Update category select in modal
+            const categorySelect = document.getElementById('itemCategory');
+            categorySelect.innerHTML = '<option value="">Select Category</option>' +
+                categories.map(cat => `<option value="${cat.id}">${cat.name}</option>`).join('');
+
+            // Render categories section
+            renderCategories();
+
+        } catch (error) {
+            console.error('Failed to load categories:', error);
+        }
+    }
+
+    async function loadMenuItems() {
+        try {
+            const query = `
+                    query {
+                        menuItems {
+                            id
+                            name
+                            description
+                            price
+                            available
+                            imageUrl
+                            category {
+                                id
+                                name
+                            }
+                        }
+                    }
+                `;
+
+            const data = await graphqlRequest(query);
+            menuItems = data.menuItems;
+            renderMenuItems();
+
+        } catch (error) {
+            const tableBody = document.getElementById('menuItemsTable');
+            tableBody.innerHTML = '<tr><td colspan="5" style="color: #ef4444; text-align: center; padding: 40px;">Failed to load menu items</td></tr>';
+        }
+    }
+
+    async function loadOrdersData() {
+        try {
+            orders = await apiRequest('/api/orders');
+            renderOrders();
+        } catch (error) {
+            const tableBody = document.getElementById('ordersTable');
+            tableBody.innerHTML = '<tr><td colspan="5" style="color: #ef4444; text-align: center; padding: 40px;">Failed to load orders</td></tr>';
+        }
+    }
+
+    // Rendering Functions
+
+
+    function renderMenuItems() {
+        const tableBody = document.getElementById('menuItemsTable');
+
+        if (menuItems.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="5" style="color: #f5f5dc; text-align: center; padding: 40px; opacity: 0.7;">No menu items found</p>';
+            return;
+        }
+
+        tableBody.innerHTML = menuItems.map(item => `
+                <tr>
+                    <td>${item.name}</td>
+                    <td>${item.category ? item.category.name : 'No Category'}</td>
+                    <td>$${item.price.toFixed(2)}</td>
+                    <td>
+                        <div class="availability-toggle ${item.available ? 'active' : ''}"
+                             onclick="toggleAvailability(${item.id}, ${!item.available})"></div>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn edit" onclick="editMenuItem(${item.id})">Edit</button>
+                            <button class="action-btn delete" onclick="deleteMenuItem(${item.id})">Delete</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+    }
+
+    function renderOrders() {
+        const tableBody = document.getElementById('ordersTable');
+
+        if (orders.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="5" style="color: #f5f5dc; text-align: center; padding: 40px; opacity: 0.7;">No orders found</p>';
+            return;
+        }
+
+        tableBody.innerHTML = orders.map(order => `
+                <tr>
+                    <td>#${order.id}</td>
+                    <td>
+                        <a href="#" class="customer-link" onclick="viewOrderDetails(${order.id})">${order.customerName}</a>
+                    </td>
+                    <td class="date-text">${new Date(order.createdAt).toLocaleDateString()}</td>
+                    <td>
+                        <span class="status-badge status-${order.status.toLowerCase()}">${order.status}</span>
+                    </td>
+                    <td class="total-amount">$${order.totalAmount.toFixed(2)}</td>
+                </tr>
+            `).join('');
+    }
+
+
+    // Menu Item Management
+    function openMenuItemModal(item = null) {
+        currentEditingItem = item;
+        const modal = document.getElementById('menuItemModal');
+        const title = document.getElementById('menuItemModalTitle');
+        const form = document.getElementById('menuItemForm');
+
+        if (item) {
+            title.textContent = 'Edit Menu Item';
+            document.getElementById('itemName').value = item.name;
+            document.getElementById('itemDescription').value = item.description || '';
+            document.getElementById('itemPrice').value = item.price;
+            document.getElementById('itemCategory').value = item.category ? item.category.id : '';
+            document.getElementById('itemImageUrl').value = item.imageUrl || '';
+            document.getElementById('itemAvailable').checked = item.available;
+        } else {
+            title.textContent = 'Add New Menu Item';
+            form.reset();
+            document.getElementById('itemAvailable').checked = true;
+        }
+
+        modal.classList.add('active');
+    }
+
+    function closeMenuItemModal() {
+        document.getElementById('menuItemModal').classList.remove('active');
+        currentEditingItem = null;
+    }
+
+    async function saveMenuItem() {
+        const name = document.getElementById('itemName').value;
+        const description = document.getElementById('itemDescription').value;
+        const price = parseFloat(document.getElementById('itemPrice').value);
+        const categoryId = document.getElementById('itemCategory').value;
+        const imageUrl = document.getElementById('itemImageUrl').value;
+        const available = document.getElementById('itemAvailable').checked;
+
+        try {
+            let mutation, variables;
+
+            if (currentEditingItem) {
+                mutation = `
+                        mutation UpdateMenuItem($id: ID!, $name: String, $description: String, $price: Float, $categoryId: ID, $imageUrl: String, $available: Boolean) {
+                            updateMenuItem(id: $id, name: $name, description: $description, price: $price, categoryId: $categoryId, imageUrl: $imageUrl, available: $available) {
+                                id
+                                name
+                                price
+                                available
+                            }
+                        }
+                    `;
+                variables = {
+                    id: currentEditingItem.id,
+                    name,
+                    description,
+                    price,
+                    categoryId: categoryId || null,
+                    imageUrl,
+                    available
+                };
+            } else {
+                mutation = `
+                        mutation CreateMenuItem($name: String!, $description: String, $price: Float!, $categoryId: ID, $imageUrl: String, $available: Boolean) {
+                            createMenuItem(name: $name, description: $description, price: $price, categoryId: $categoryId, imageUrl: $imageUrl, available: $available) {
+                                id
+                                name
+                                price
+                                available
+                            }
+                        }
+                    `;
+                variables = {
+                    name,
+                    description,
+                    price,
+                    categoryId: categoryId || null,
+                    imageUrl,
+                    available
+                };
+            }
+
+            await graphqlRequest(mutation, variables);
+
+            showToast('Success', `Menu item ${currentEditingItem ? 'updated' : 'created'} successfully`, 'success');
+            closeMenuItemModal();
+            loadMenuItems();
+
+        } catch (error) {
+            showToast('Error', 'Failed to save menu item', 'error');
+        }
+    }
+
+    async function editMenuItem(id) {
+        const item = menuItems.find(item => item.id == id);
+        if (item) {
+            openMenuItemModal(item);
+        }
+    }
+
+    async function deleteMenuItem(id) {
+        if (!confirm('Are you sure you want to delete this menu item?')) {
+            return;
+        }
+
+        try {
+            const mutation = `
+                    mutation DeleteMenuItem($id: ID!) {
+                        deleteMenuItem(id: $id)
+                    }
+                `;
+
+            await graphqlRequest(mutation, { id: id.toString() });
+
+            showToast('Success', 'Menu item deleted successfully', 'success');
+            loadMenuItems();
+
+        } catch (error) {
+            showToast('Error', 'Failed to delete menu item', 'error');
+        }
+    }
+
+    async function toggleAvailability(id, available) {
+        try {
+            const mutation = `
+                    mutation UpdateMenuItem($id: ID!, $available: Boolean) {
+                        updateMenuItem(id: $id, available: $available) {
+                            id
+                            available
+                        }
+                    }
+                `;
+
+            await graphqlRequest(mutation, { id: id.toString(), available });
+
+            showToast('Success', `Item ${available ? 'enabled' : 'disabled'} successfully`, 'success');
+            loadMenuItems();
+
+        } catch (error) {
+            showToast('Error', 'Failed to update availability', 'error');
+        }
+    }
+
+    // Order Management
+    async function viewOrderDetails(orderId) {
+        const modal = document.getElementById('orderDetailsModal');
+        const content = document.getElementById('orderDetailsContent');
+
+        modal.classList.add('active');
+        content.innerHTML = '<div class="loading"><div class="spinner"></div>Loading order details...</div>';
+
+        try {
+            const order = await apiRequest(`/api/orders/${orderId}`);
+
+            content.innerHTML = `
+                    <div style="margin-bottom: 24px;">
+                        <h3>Order #${order.id}</h3>
+                        <p><strong>Customer:</strong> ${order.customerName}</p>
+                        <p><strong>Phone:</strong> ${order.customerPhone}</p>
+                        <p><strong>Email:</strong> ${order.customerEmail}</p>
+                        <p><strong>Status:</strong> <span class="status-badge status-${order.status.toLowerCase()}">${order.status}</span></p>
+                        <p><strong>Total:</strong> $${order.totalAmount.toFixed(2)}</p>
+                        <p><strong>Date:</strong> ${new Date(order.createdAt).toLocaleString()}</p>
+                    </div>
+
+                    <h4 style="margin-bottom: 16px;">Order Items</h4>
+                    <div style="border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 8px; overflow: hidden;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: rgba(212, 175, 55, 0.1);">
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid rgba(212, 175, 55, 0.2); color: #d4af37;">Item</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid rgba(212, 175, 55, 0.2); color: #d4af37;">Quantity</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid rgba(212, 175, 55, 0.2); color: #d4af37;">Price</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid rgba(212, 175, 55, 0.2); color: #d4af37;">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${order.orderItems.map(item => `
+                                    <tr>
+                                        <td style="padding: 12px; border-bottom: 1px solid rgba(212, 175, 55, 0.1); color: #f5f5dc;">${item.menuItemName}</td>
+                                        <td style="padding: 12px; border-bottom: 1px solid rgba(212, 175, 55, 0.1); color: #f5f5dc;">${item.quantity}</td>
+                                        <td style="padding: 12px; border-bottom: 1px solid rgba(212, 175, 55, 0.1); color: #f5f5dc;">$${item.unitPrice.toFixed(2)}</td>
+                                        <td style="padding: 12px; border-bottom: 1px solid rgba(212, 175, 55, 0.1); color: #d4af37; font-weight: 600;">$${item.subtotal.toFixed(2)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style="margin-top: 24px;">
+                        <h4 style="margin-bottom: 16px; color: #d4af37;">Update Status</h4>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <button class="btn btn-secondary" onclick="updateOrderStatus(${order.id}, 'PENDING')">Pending</button>
+                            <button class="btn btn-secondary" onclick="updateOrderStatus(${order.id}, 'CONFIRMED')">Confirmed</button>
+                            <button class="btn btn-secondary" onclick="updateOrderStatus(${order.id}, 'PREPARING')">Preparing</button>
+                            <button class="btn btn-secondary" onclick="updateOrderStatus(${order.id}, 'READY')">Ready</button>
+                            <button class="btn btn-primary" onclick="updateOrderStatus(${order.id}, 'DELIVERED')">Delivered</button>
+                            <button class="btn btn-secondary" onclick="updateOrderStatus(${order.id}, 'CANCELLED')" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.3);">Cancelled</button>
+                        </div>
+                    </div>
+                `;
+
+        } catch (error) {
+            content.innerHTML = '<p style="color: #ef4444; text-align: center; padding: 40px;">Failed to load order details</p>';
+        }
+    }
+
+    function closeOrderDetailsModal() {
+        document.getElementById('orderDetailsModal').classList.remove('active');
+    }
+
+    async function updateOrderStatus(orderId, status) {
+        try {
+            await apiRequest(`/api/orders/${orderId}/status`, {
+                method: 'PUT',
+                body: JSON.stringify(status)
+            });
+
+            showToast('Success', `Order status updated to ${status}`, 'success');
+            closeOrderDetailsModal();
+            loadOrdersData();
+
+        } catch (error) {
+            showToast('Error', 'Failed to update order status', 'error');
+        }
+    }
+
+    // Filtering and Search
+    function filterMenuItems(searchTerm) {
+        const filteredItems = menuItems.filter(item =>
+            item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (item.category && item.category.name.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+
+        renderFilteredMenuItems(filteredItems);
+    }
+
+    function filterMenuByAvailability(filter) {
+        let filteredItems;
+
+        switch(filter) {
+            case 'available':
+                filteredItems = menuItems.filter(item => item.available);
+                break;
+            case 'unavailable':
+                filteredItems = menuItems.filter(item => !item.available);
+                break;
+            default:
+                filteredItems = menuItems;
+        }
+
+        renderFilteredMenuItems(filteredItems);
+    }
+
+    function renderFilteredMenuItems(items) {
+        const tableBody = document.getElementById('menuItemsTable');
+
+        if (items.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="5" style="color: #f5f5dc; text-align: center; padding: 40px; opacity: 0.7;">No items match your criteria</td></tr>';
+            return;
+        }
+
+        tableBody.innerHTML = items.map(item => `
+                <tr>
+                    <td>${item.name}</td>
+                    <td>${item.category ? item.category.name : 'No Category'}</td>
+                    <td>$${item.price.toFixed(2)}</td>
+                    <td>
+                        <div class="availability-toggle ${item.available ? 'active' : ''}"
+                             onclick="toggleAvailability(${item.id}, ${!item.available})"></div>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn edit" onclick="editMenuItem(${item.id})">Edit</button>
+                            <button class="action-btn delete" onclick="deleteMenuItem(${item.id})">Delete</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+    }
+
+    // Notification System
+    function showToast(title, message, type = 'info') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+
+        toast.innerHTML = `
+                <div class="toast-header">
+                    <div class="toast-title">${title}</div>
+                    <button class="toast-close" onclick="this.parentElement.parentElement.remove()">&times;</button>
+                </div>
+                <div class="toast-message">${message}</div>
+            `;
+
+        container.appendChild(toast);
+
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            if (toast.parentElement) {
+                toast.remove();
+            }
+        }, 5000);
+    }
+
+    function updateNotificationCount() {
+        notificationCount++;
+        document.getElementById('notificationBadge').textContent = notificationCount;
+    }
+
+    // Initialize the app when DOM is loaded
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeApp);
+    } else {
+        initializeApp();
+    }
+
+    function renderCategories() {
+        const categoriesSection = document.getElementById('categoriesSection');
+
+        if (categories.length === 0) {
+            categoriesSection.innerHTML = '<div style="color: #f5f5dc; text-align: center; padding: 40px; opacity: 0.7;">No categories found</div>';
+            return;
+        }
+
+        // Fixed category images with proper static URLs
+        const categoryImages = {
+            'Smoothies': 'https://plus.unsplash.com/premium_photo-1663089587926-ff5a03d17b48?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8c21vb3RoaWVzfGVufDB8fDB8fHww',
+            'Main Courses': 'https://media.istockphoto.com/id/1422610210/photo/grilled-lamb-rib-chops.webp?a=1&b=1&s=612x612&w=0&k=20&c=YSVbdnURGmEfOlJV-K0GvQ7LalU2NCt5ZkCs5UmO36s=',
+            'Desserts': 'https://images.unsplash.com/photo-1551024506-0bccd828d307?w=140&h=100&fit=crop',
+            'Hot Beverages': 'https://images.unsplash.com/photo-1732905845583-dc283f2c19cf?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8aG90JTIwYmV2ZXJhZ2VzfGVufDB8fDB8fHww',
+            'Drinks': 'https://images.unsplash.com/photo-1481671703460-040cb8a2d909?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8ZHJpbmtzfGVufDB8fDB8fHww',
+            'Salads': 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=140&h=100&fit=crop'
+        };
+
+        categoriesSection.innerHTML = categories.map(category => {
+            const imageUrl = categoryImages[category.name] || 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=140&h=100&fit=crop';
+
+            return `
+            <div class="category-card">
+                <div class="category-content">
+                    <div class="category-info">
+                        <h3 class="category-name">${category.name}</h3>
+                        <p class="category-description">${category.description}</p>
+                    </div>
+                    <img src="${imageUrl}"
+                         alt="${category.name}"
+                         class="category-image"
+                         onerror="this.src='https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=140&h=100&fit=crop'">
+                </div>
+            </div>
+        `;
+        }).join('');
+    }
+
+
+</script>
+</body>
+</html>
