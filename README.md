@@ -15,12 +15,16 @@ Other Services:
 This project includes several microservices. For more details, please visit the repositories below:
 
 Menu Service — Provides menu management with a GraphQL API
+👉 https://github.com/GulnarMammadzada/MenuService.git
 
 Order Service — Handles customer orders and order processing (REST API)
+👉 https://github.com/GulnarMammadzada/OrderService.git
 
 Notification Service — Sends real-time notifications via WebSocket
+👉 https://github.com/GulnarMammadzada/NotificationService.git
 
-Eureka Server — Service discovery for microservices
+Eureka Server (Service Discovery) — Service registration & discovery
+👉 https://github.com/GulnarMammadzada/EurekaServerApp.git
 
 Key Features:
 
@@ -30,9 +34,9 @@ Circuit Breaker (Resilience4j) for resilience and fault tolerance
 
 Testing coverage with JUnit, Mockito, TestContainers, and GraphQL API tests
 
-Layered architecture with SOLID principles for maintainability
+Layered architecture following SOLID principles for maintainable and clean code
 
-AI-powered simple frontend for demonstration and testing purposes
+AI-powered simple frontend for demonstration and testing (if applicable)
 
 Technologies Used:
 
